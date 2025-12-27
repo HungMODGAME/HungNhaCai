@@ -1,48 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang Quản Trị Giftcode</title>
+    <title>Quản Trị Giftcode Hệ Thống</title>
     <style>
-        body { background: #111; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
-        .form { background: #222; padding: 20px; border: 1px solid gold; display: inline-block; border-radius: 10px; }
-        input { display: block; width: 300px; margin: 10px 0; padding: 10px; background: #333; color: white; border: 1px solid #444; }
-        button { width: 100%; padding: 10px; background: gold; border: none; font-weight: bold; cursor: pointer; }
+        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --bg: #0d0d0d; --card: #1a1a1a; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .box { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--gold); width: 100%; max-width: 500px; margin-bottom: 30px; }
+        h2 { color: var(--gold); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: var(--gold); border: none; font-weight: bold; cursor: pointer; border-radius: 8px; transition: 0.3s; margin-top: 10px; }
+        button:hover { opacity: 0.8; }
+        table { width: 100%; max-width: 900px; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; margin-top: 20px; }
+        th, td { padding: 15px; text-align: center; border-bottom: 1px solid #333; }
+        th { background: #222; color: var(--gold); }
+        .copy-btn { background: var(--green); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; width: auto; cursor: pointer; border: none; }
+        .del-btn { background: var(--red); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; width: auto; cursor: pointer; border: none; }
+        .status-full { color: var(--red); font-weight: bold; font-size: 11px; }
     </style>
 </head>
 <body>
-    <h2>TẠO GIFTCODE HỆ THỐNG</h2>
-    <div class="form">
-        <input type="text" id="c_name" placeholder="Mã Code (VD: TANTHU88)">
-        <input type="number" id="c_val" placeholder="Giá trị tiền (VND)">
-        <input type="number" id="c_dev" placeholder="Số thiết bị được nhập tối đa">
-        <input type="number" id="c_per" placeholder="Số lần nhập / 1 tài khoản">
-        <button onclick="createCode()">XÁC NHẬN TẠO</button>
+
+    <h2>HỆ THỐNG QUẢN LÝ GIFTCODE</h2>
+    
+    <div class="box">
+        <input type="text" id="c_name" placeholder="Mã Code (Ví dụ: TANTHU88)">
+        <input type="text" id="c_val" placeholder="Giá trị tiền (VND)">
+        <input type="number" id="c_dev" placeholder="Tổng số thiết bị tối đa">
+        <input type="number" id="c_per" placeholder="Lượt nhập / 1 tài khoản">
+        <button onclick="createCode()">XÁC NHẬN TẠO MÃ</button>
     </div>
 
+    <h3>LỊCH SỬ GIFTCODE ĐÃ TẠO</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>MÃ CODE</th>
+                <th>GIÁ TRỊ</th>
+                <th>LƯỢT NHẬP</th>
+                <th>GIỚI HẠN/ACC</th>
+                <th>HÀNH ĐỘNG</th>
+            </tr>
+        </thead>
+        <tbody id="code-list"></tbody>
+    </table>
+
     <script>
-        // THAY LINK FIREBASE CỦA BẠN VÀO ĐÂY
         const FIREBASE_URL = "https://hethongcode-7a64c-default-rtdb.asia-southeast1.firebasedatabase.app/giftcodes";
+
+        // Tự động định dạng tiền khi nhập
+        document.getElementById('c_val').addEventListener('input', function(e) {
+            let v = this.value.replace(/\D/g, "");
+            if (v) this.value = Number(v).toLocaleString('vi-VN');
+        });
 
         async function createCode() {
             let name = document.getElementById('c_name').value.trim().toUpperCase();
-            let val = document.getElementById('c_val').value;
+            let val = document.getElementById('c_val').value.replace(/\./g, ""); // Xóa dấu chấm để lưu số
             let dev = document.getElementById('c_dev').value;
             let per = document.getElementById('c_per').value;
 
-            if(!name || !val) return alert("Vui lòng nhập đủ thông tin!");
+            if(!name || !val || !dev || !per) return alert("Vui lòng nhập đủ thông tin!");
 
-            await fetch(`${FIREBASE_URL}/${name}.json`, {
-                method: 'PUT',
-                body: JSON.stringify({
-                    money: parseInt(val),
-                    maxDevices: parseInt(dev),
-                    used: 0,
-                    maxPerAcc: parseInt(per)
-                })
-            });
-            alert("Đã tạo mã " + name + " thành công!");
+            try {
+                await fetch(`${FIREBASE_URL}/${name}.json`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        money: parseInt(val),
+                        maxDevices: parseInt(dev),
+                        used: 0,
+                        maxPerAcc: parseInt(per),
+                        createdAt: Date.now(),
+                        fullAt: null
+                    })
+                });
+                alert("Đã tạo mã thành công!");
+                document.getElementById('c_name').value = "";
+                document.getElementById('c_val').value = "";
+                loadCodes();
+            } catch (e) { alert("Lỗi: " + e.message); }
         }
+
+        async function loadCodes() {
+            try {
+                let response = await fetch(`${FIREBASE_URL}.json`);
+                let data = await response.json();
+                let html = "";
+                const now = Date.now();
+                const oneDayInMs = 24 * 60 * 60 * 1000;
+
+                for (let key in data) {
+                    let item = data[key];
+                    if (item.used >= item.maxDevices) {
+                        if (!item.fullAt) {
+                            await fetch(`${FIREBASE_URL}/${key}.json`, { method: 'PATCH', body: JSON.stringify({ fullAt: now }) });
+                            item.fullAt = now;
+                        }
+                        if (now - item.fullAt > oneDayInMs) {
+                            await deleteCode(key, false);
+                            continue;
+                        }
+                    }
+
+                    html += `<tr>
+                        <td><b>${key}</b></td>
+                        <td style="color:var(--green)">${item.money.toLocaleString('vi-VN')}</td>
+                        <td>${item.used}/${item.maxDevices} ${item.used >= item.maxDevices ? '<br><span class="status-full">(Sẽ xóa sau 24h)</span>' : ''}</td>
+                        <td>${item.maxPerAcc}</td>
+                        <td>
+                            <button class="copy-btn" onclick="copyCode('${key}')">Copy</button>
+                            <button class="del-btn" onclick="deleteCode('${key}')">Xóa</button>
+                        </td>
+                    </tr>`;
+                }
+                document.getElementById('code-list').innerHTML = html || '<tr><td colspan="5">Chưa có mã nào</td></tr>';
+            } catch (e) { console.error(e); }
+        }
+
+        async function deleteCode(key, confirmReq = true) {
+            if (confirmReq && !confirm("Xóa mã này?")) return;
+            await fetch(`${FIREBASE_URL}/${key}.json`, { method: 'DELETE' });
+            loadCodes();
+        }
+
+        function copyCode(key) {
+            navigator.clipboard.writeText(key);
+            alert("Đã copy: " + key);
+        }
+
+        setInterval(loadCodes, 5000);
+        window.onload = loadCodes;
     </script>
 </body>
 </html>
