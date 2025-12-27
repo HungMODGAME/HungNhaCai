@@ -90,7 +90,17 @@
     <div class="side-bet-container"><div id="res-tai" style="display:none; text-align:center; font-weight:bold; color:var(--green); position:absolute; top:-30px; width:100%;"></div><div class="bet-box" id="box-tai" onclick="moSelector('Tai')"><div id="bet-tai-val" class="my-bet-info">0</div><div class="stat-line">👤 <span id="bot-p-tai">0</span></div><div style="color:var(--green); font-size:2.2rem; font-weight:900;">TÀI</div><div class="total-money" id="bot-m-tai">0</div></div><button class="cancel-btn" onclick="huyCuoc('Tai')">HỦY CƯỢC TÀI</button></div>
 </div>
 
-<div class="bet-selector" id="bet-selector-ui"><div class="selector-card"><h2 id="select-title" style="color:var(--gold)">CƯỢC</h2><div style="font-size: 2rem; margin: 15px 0;" id="temp-amt-view">0</div><div class="amt-btn-group"><button class="amt-btn" onclick="congTien(1000000)">1M</button><button class="amt-btn" onclick="congTien(10000000)">10M</button><button class="amt-btn" onclick="congTien(50000000)">50M</button><button class="amt-btn" onclick="congTien('ALL')" style="background:var(--gold); color:#000;">TẤT TAY</button></div><button onclick="xacNhanCuoc()" style="width:100%; padding:15px; background:var(--green); border:none; border-radius:10px; color:white; font-weight:bold;">ĐẶT CƯỢC</button><button onclick="dongSelector()" style="width:100%; padding:10px; background:#444; border:none; border-radius:10px; color:white; margin-top:10px;">HỦY</button></div></div>
+<div class="bet-selector" id="bet-selector-ui"><div class="selector-card"><h2 id="select-title" style="color:var(--gold)">CƯỢC</h2><div style="font-size: 2rem; margin: 15px 0;" id="temp-amt-view">0</div><div class="amt-btn-group">
+    <button class="amt-btn" onclick="congTien(1000)">1K</button>
+    <button class="amt-btn" onclick="congTien(5000)">5K</button>
+    <button class="amt-btn" onclick="congTien(10000)">10K</button>
+    <button class="amt-btn" onclick="congTien(100000)">100K</button>
+    <button class="amt-btn" onclick="congTien(500000)">500K</button>
+    <button class="amt-btn" onclick="congTien(1000000)">1M</button>
+    <button class="amt-btn" onclick="congTien(5000000)">5M</button>
+    <button class="amt-btn" onclick="congTien(10000000)">10M</button>
+    <button class="amt-btn" onclick="congTien(50000000)">50M</button>
+    <button class="amt-btn" onclick="congTien('ALL')" style="background:var(--gold); color:#000;">TẤT TAY</button></div><button onclick="xacNhanCuoc()" style="width:100%; padding:15px; background:var(--green); border:none; border-radius:10px; color:white; font-weight:bold;">ĐẶT CƯỢC</button><button onclick="dongSelector()" style="width:100%; padding:10px; background:#444; border:none; border-radius:10px; color:white; margin-top:10px;">HỦY</button></div></div>
 
 <div class="popup" id="popup-soicau">
     <div class="card" style="max-width: 95vw; width: 600px; position: relative;">
