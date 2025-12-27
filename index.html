@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tài Xỉu Live - Pro Multi-Device</title>
+    <title>NHÀ CÁI - VUA MODS</title>
     <style>
         /* GIỮ NGUYÊN TOÀN BỘ CSS CỦA BẠN */
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --bg: #0d0d0d; --card: #1a1a1a; }
@@ -228,15 +228,57 @@
     }
     
     async function doGift() {
-        let code = document.getElementById('g-code').value.trim().toUpperCase(); if(!code) return alert("Chưa nhập mã!");
-        const FIREBASE_URL = "https://hethongcode-7a64c-default-rtdb.asia-southeast1.firebasedatabase.app/giftcodes";
-        try {
-            let res = await fetch(`${FIREBASE_URL}/${code}.json`); let data = await res.json();
-            if (data) {
-                userBalance += data.money; capNhatBalance(); alert("Nhận thành công " + data.money.toLocaleString()); closeUserPanel();
-            } else { alert("Mã không tồn tại!"); }
-        } catch (e) { alert("Lỗi kết nối!"); }
+    let code = document.getElementById('g-code').value.trim().toUpperCase();
+    if (!code) return alert("Chưa nhập mã!");
+
+    const FIREBASE_URL = "https://hethongcode-7a64c-default-rtdb.asia-southeast1.firebasedatabase.app/giftcodes";
+    
+    try {
+        // 1. Lấy dữ liệu code từ Firebase
+        let res = await fetch(`${FIREBASE_URL}/${code}.json`);
+        let data = await res.json();
+
+        if (!data) return alert("Mã Giftcode không tồn tại!");
+
+        // 2. Kiểm tra tổng số lượt nhập (Tổng thiết bị)
+        if (data.used >= data.maxDevices) {
+            return alert("Mã này đã hết lượt sử dụng trên toàn hệ thống!");
+        }
+
+        // 3. Kiểm tra giới hạn nhập của từng tài khoản (maxPerAcc)
+        // Lưu trữ lịch sử nhập vào localStorage của trình duyệt
+        let giftHistory = JSON.parse(localStorage.getItem('TX_GIFT_HISTORY') || "{}");
+        let usedCount = giftHistory[code] || 0;
+
+        if (usedCount >= data.maxPerAcc) {
+            return alert(`Bạn đã hết lượt nhập mã này (Tối đa: ${data.maxPerAcc} lần/acc)!`);
+        }
+
+        // 4. Thực hiện cộng tiền và cập nhật hệ thống
+        // Tăng số lượt dùng trên Firebase
+        await fetch(`${FIREBASE_URL}/${code}.json`, {
+            method: 'PATCH',
+            body: JSON.stringify({ used: data.used + 1 })
+        });
+
+        // Cộng tiền cho người chơi
+        userBalance += data.money;
+        
+        // Lưu lịch sử nhập của acc này
+        giftHistory[code] = usedCount + 1;
+        localStorage.setItem('TX_GIFT_HISTORY', JSON.stringify(giftHistory));
+
+        // Cập nhật giao diện
+        capNhatBalance();
+        alert(`Chúc mừng! Bạn đã nhận được ${data.money.toLocaleString()} VND`);
+        document.getElementById('g-code').value = ""; // Xóa ô nhập sau khi thành công
+        closeUserPanel();
+
+    } catch (e) {
+        console.error(e);
+        alert("Lỗi kết nối hệ thống, vui lòng thử lại!");
     }
+}
 
     function moSelector(side) {
         let elapsed = Math.floor(Date.now() / 1000) % 73;
