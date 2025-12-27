@@ -2,52 +2,106 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tài Xỉu Live - Full Update</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tài Xỉu Live - Pro Multi-Device</title>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --bg: #0d0d0d; --card: #1a1a1a; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; user-select: none; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* Màn hình Auth */
+        body { 
+            background: var(--bg); 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        /* --- CẢNH BÁO XOAY MÀN HÌNH (CHO MOBILE) --- */
+        #rotate-warning {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        #rotate-warning .icon { font-size: 60px; animation: rotatePhone 2s infinite; }
+        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+
+        /* Hiện cảnh báo khi màn hình dọc trên thiết bị di động */
+        @media screen and (orientation: portrait) and (max-width: 1024px) {
+            #rotate-warning { display: flex; }
+        }
+
+        /* --- LAYOUT CHÍNH & RESPONSIVE --- */
+        .header { 
+            height: 60px;
+            background: #111; 
+            padding: 0 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid var(--gold); 
+            flex-shrink: 0;
+            z-index: 100; 
+        }
+
+        .game-main-horizontal { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-around; 
+            padding: 10px;
+            gap: 10px;
+            background: radial-gradient(circle, #222 0%, #000 100%);
+        }
+
+        .side-bet-container { width: 25%; max-width: 230px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+        .center-container { width: 40%; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; }
+
+        /* Tối ưu kích thước khi màn hình thấp (Mobile ngang) */
+        @media (max-height: 500px) {
+            .header { height: 45px; }
+            #timer { font-size: 2.5rem !important; margin-bottom: 0 !important; }
+            .plate-area { width: 140px !important; height: 140px !important; }
+            .dice { width: 30px !important; height: 30px !important; line-height: 30px !important; font-size: 1.2rem !important; }
+            .bet-box { padding: 5px !important; }
+            .bet-box div[style*="font-size: 2.2rem"] { font-size: 1.5rem !important; }
+        }
+
+        /* --- CÁC THÀNH PHẦN GIỮ NGUYÊN STYLE CŨ --- */
         #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; }
         .auth-box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--gold); width: 320px; text-align: center; }
         .auth-input { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
 
-        .header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); z-index: 100; }
         .balance-box { color: var(--gold); font-weight: bold; font-family: monospace; font-size: 1.2rem; }
-        .user-icon { width: 45px; height: 45px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--gold); cursor: pointer; }
-        .sc-icon { width: 45px; height: 45px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--gold); }
+        .user-icon, .sc-icon { width: 45px; height: 45px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--gold); cursor: pointer; }
         
-        /* Menu người dùng gộp */
         .user-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; align-items: center; justify-content: center; }
-        .panel-card { background: var(--card); width: 90%; max-width: 400px; border-radius: 20px; border: 1px solid #333; overflow: hidden; }
+        .panel-card { background: var(--card); width: 95%; max-width: 400px; border-radius: 20px; border: 1px solid #333; overflow: hidden; }
         .panel-tabs { display: flex; background: #111; }
         .p-tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; color: #666; font-weight: bold; border-bottom: 2px solid transparent; }
         .p-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
         .p-content { padding: 20px; display: none; }
         .p-content.active { display: block; }
 
-        /* Rút tiền */
-        .bank-suggest { position: absolute; background: #222; border: 1px solid #444; width: 100%; max-height: 120px; overflow-y: auto; z-index: 10; display: none; }
-        .bank-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; font-size: 0.9rem; }
-
-        /* --- CSS CẬP NHẬT MỚI --- */
         #withdraw-loading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9000; flex-direction: column; align-items: center; justify-content: center; }
         .loader { border: 5px solid #333; border-top: 5px solid var(--gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #video-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; align-items: center; justify-content: center; }
         #withdraw-video { width: 100%; max-height: 100vh; }
-        /* ----------------------- */
 
-        /* Game Main (Giữ nguyên) */
-        .game-main-horizontal { flex: 1; display: flex; align-items: center; justify-content: space-around; padding: 10px; }
-        .side-bet-container { width: 230px; display: flex; flex-direction: column; gap: 8px; position: relative; }
-        .center-container { text-align: center; position: relative; }
         #timer { font-size: 4rem; color: var(--red); font-weight: 900; margin-bottom: 5px; }
         .plate-area { position: relative; width: 200px; height: 200px; background: #fff; border-radius: 50%; border: 8px solid #2c3e50; display: flex; justify-content: center; align-items: center; }
-        .dice { width: 42px; height: 42px; background: white; color: black; line-height: 42px; font-weight: bold; font-size: 1.8rem; border: 2px solid #000; margin: 0 3px; border-radius: 6px; text-align: center; }
+        .dice { width: 42px; height: 42px; color: black; line-height: 42px; font-weight: bold; font-size: 1.8rem; margin: 0 20px; text-align: center; }
         #bowl { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 30% 30%, #555, #000); border-radius: 50%; z-index: 10; cursor: grab; }
         .bet-box { background: rgba(30, 30, 30, 0.9); border: 2px solid #444; border-radius: 15px; padding: 12px; text-align: center; position: relative; cursor: pointer; }
         .my-bet-info { background: var(--gold); color: #000; font-size: 0.8rem; font-weight: bold; padding: 3px 10px; border-radius: 5px; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); display: none; }
@@ -60,9 +114,17 @@
         .amt-btn { padding: 10px; background: #333; color: white; border: none; border-radius: 8px; font-weight: bold; }
         .popup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
         .card { background: #1a1a1a; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; border: 1px solid #333; }
+        .bank-suggest { position: absolute; background: #222; border: 1px solid #444; width: 100%; max-height: 120px; overflow-y: auto; z-index: 10; display: none; }
+        .bank-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; font-size: 0.9rem; }
     </style>
 </head>
 <body>
+
+<div id="rotate-warning">
+    <div class="icon">🔄</div>
+    <h2 style="color:var(--gold); margin-top:15px;">VUI LÒNG XOAY NGANG MÀN HÌNH</h2>
+    <p style="color:#888;">Để có trải nghiệm chơi tốt nhất trên thiết bị di động</p>
+</div>
 
 <div id="withdraw-loading">
     <div class="loader"></div>
@@ -181,18 +243,15 @@
 </div>
 
 <script>
-    // BIẾN HỆ THỐNG MỚI
+    // GIỮ NGUYÊN TOÀN BỘ SCRIPT TỪ BẢN GỐC CỦA BẠN
     let userBalance = 100000000;
     let loggedUser = null;
     let isLogin = true;
     const listBank = ["Vietcombank", "Techcombank", "Agribank", "MB Bank", "BIDV", "Vietinbank", "ACB", "TPBank", "Sacombank", "VPBank"];
-
-    // BIẾN GAME CŨ
     let lichSuCau = [];
     let botPlayerXiu = 0, botMoneyXiu = 0, botPlayerTai = 0, botMoneyTai = 0, targetPlayers = 0;
     let currentBetSide = "", currentBetAmount = 0, ketQuaHienTai = [1, 1, 1], daNanBat = false, tempSelectAmount = 0;
 
-    // --- AUTH ---
     function switchAuth() {
         isLogin = !isLogin;
         document.getElementById('auth-title').innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
@@ -207,103 +266,51 @@
         saveData();
         capNhatBalance();
     }
-    function doLogout() {
-        localStorage.removeItem('TX_SESS_V4');
-        location.reload();
-    }
-
-    // --- USER PANEL ---
-    function openUserPanel() {
-        document.getElementById('user-panel').style.display = "flex";
-        document.getElementById('p-bal').innerText = userBalance.toLocaleString() + " VND";
-    }
+    function doLogout() { localStorage.removeItem('TX_SESS_V4'); location.reload(); }
+    function openUserPanel() { document.getElementById('user-panel').style.display = "flex"; document.getElementById('p-bal').innerText = userBalance.toLocaleString() + " VND"; }
     function closeUserPanel() { document.getElementById('user-panel').style.display = "none"; }
     function showP(idx) {
         document.querySelectorAll('.p-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
         document.querySelectorAll('.p-content').forEach((c, i) => c.classList.toggle('active', i === idx));
     }
-
-    // --- RÚT TIỀN (CẬP NHẬT: LOAD 5S + VIDEO) ---
     function doWithdraw() {
         let val = document.getElementById('w-amt').value.replace(/\D/g, "");
         let amt = parseInt(val);
         if(!val || amt < 1000000) return alert("Rút tối thiểu 1.000.000 VND");
         if(amt > userBalance) return alert("Không đủ số dư");
-
-        // 1. Hiện Loading
         document.getElementById('withdraw-loading').style.display = "flex";
-        
         setTimeout(() => {
-            // 2. Ẩn Loading & Thực hiện trừ tiền
             document.getElementById('withdraw-loading').style.display = "none";
-            userBalance -= amt;
-            capNhatBalance();
-            closeUserPanel();
-
-            // 3. Hiện Video
+            userBalance -= amt; capNhatBalance(); closeUserPanel();
             const overlay = document.getElementById('video-overlay');
             const video = document.getElementById('withdraw-video');
-            overlay.style.display = "flex";
-            video.play();
-
-            // 4. Tự đóng khi video kết thúc
-            video.onended = () => {
-                overlay.style.display = "none";
-                alert("Yêu cầu rút " + amt.toLocaleString() + " VND đã được gửi thành công!");
-            };
+            overlay.style.display = "flex"; video.play();
+            video.onended = () => { overlay.style.display = "none"; alert("Yêu cầu rút " + amt.toLocaleString() + " VND đã được gửi thành công!"); };
         }, 5000);
     }
-
-    // --- GIFTCODE ---
-   // Thay thế hàm doGift cũ
-async function doGift() {
-    let code = document.getElementById('g-code').value.trim().toUpperCase();
-    if(!code) return alert("Bạn chưa nhập mã!");
-
-    // DÙNG CHUNG LINK VỚI TRANG ADMIN Ở BƯỚC 2
-    const FIREBASE_URL = "https://hethongcode-7a64c-default-rtdb.asia-southeast1.firebasedatabase.app/giftcodes";
-
-    try {
-        let response = await fetch(`${FIREBASE_URL}/${code}.json`);
-        let data = await response.json();
-
-        if (data) {
-            // 1. Kiểm tra tổng số thiết bị đã dùng mã này
-            if (data.used >= data.maxDevices) return alert("Mã này đã hết lượt dùng trên toàn hệ thống!");
-
-            // 2. Kiểm tra tài khoản này đã dùng mã này chưa (lưu trong máy người dùng)
-            let userUsed = localStorage.getItem(`used_${code}_${loggedUser}`) || 0;
-            if (parseInt(userUsed) >= data.maxPerAcc) return alert("Tài khoản của bạn đã dùng mã này rồi!");
-
-            // 3. Cộng tiền vào số dư
-            userBalance += data.money;
-            capNhatBalance();
-
-            // 4. Cập nhật lượt dùng lên Firebase cho cả hệ thống biết
-            await fetch(`${FIREBASE_URL}/${code}.json`, {
-                method: 'PATCH',
-                body: JSON.stringify({ used: data.used + 1 })
-            });
-
-            // 5. Đánh dấu tài khoản này đã dùng mã
-            localStorage.setItem(`used_${code}_${loggedUser}`, parseInt(userUsed) + 1);
-
-            alert("Chúc mừng! Bạn nhận được " + data.money.toLocaleString() + " VND");
-            closeUserPanel();
-        } else {
-            alert("Mã Giftcode không tồn tại!");
-        }
-    } catch (e) {
-        alert("Lỗi kết nối máy chủ Giftcode!");
+    async function doGift() {
+        let code = document.getElementById('g-code').value.trim().toUpperCase();
+        if(!code) return alert("Bạn chưa nhập mã!");
+        const FIREBASE_URL = "https://hethongcode-7a64c-default-rtdb.asia-southeast1.firebasedatabase.app/giftcodes";
+        try {
+            let response = await fetch(`${FIREBASE_URL}/${code}.json`);
+            let data = await response.json();
+            if (data) {
+                if (data.used >= data.maxDevices) return alert("Mã này đã hết lượt dùng trên toàn hệ thống!");
+                let userUsed = localStorage.getItem(`used_${code}_${loggedUser}`) || 0;
+                if (parseInt(userUsed) >= data.maxPerAcc) return alert("Tài khoản của bạn đã dùng mã này rồi!");
+                userBalance += data.money; capNhatBalance();
+                await fetch(`${FIREBASE_URL}/${code}.json`, { method: 'PATCH', body: JSON.stringify({ used: data.used + 1 }) });
+                localStorage.setItem(`used_${code}_${loggedUser}`, parseInt(userUsed) + 1);
+                alert("Chúc mừng! Bạn nhận được " + data.money.toLocaleString() + " VND");
+                closeUserPanel();
+            } else { alert("Mã Giftcode không tồn tại!"); }
+        } catch (e) { alert("Lỗi kết nối máy chủ Giftcode!"); }
     }
-}
-
-    // --- LOGIC GAME GỐC (GIỮ NGUYÊN) ---
     function suggestBank() {
         let val = document.getElementById('w-bank').value.toLowerCase();
         let list = document.getElementById('b-list');
-        list.innerHTML = "";
-        if(!val) { list.style.display = "none"; return; }
+        list.innerHTML = ""; if(!val) { list.style.display = "none"; return; }
         let filtered = listBank.filter(b => b.toLowerCase().includes(val));
         filtered.forEach(b => {
             let d = document.createElement('div'); d.className = "bank-item"; d.innerText = b;
@@ -312,164 +319,65 @@ async function doGift() {
         });
         list.style.display = filtered.length ? "block" : "none";
     }
-    function formatAmt(input) {
-        let v = input.value.replace(/\D/g, "");
-        if(v) input.value = Number(v).toLocaleString('vi-VN');
-    }
-
-    function saveData() {
-        const data = { bal: userBalance, user: loggedUser, hist: lichSuCau, bX: {p:botPlayerXiu, m:botMoneyXiu}, bT: {p:botPlayerTai, m:botMoneyTai}, bet: {s:currentBetSide, a:currentBetAmount}, tgt: targetPlayers };
-        localStorage.setItem('TX_SESS_V4', JSON.stringify(data));
-    }
-
+    function formatAmt(input) { let v = input.value.replace(/\D/g, ""); if(v) input.value = Number(v).toLocaleString('vi-VN'); }
+    function saveData() { const data = { bal: userBalance, user: loggedUser, hist: lichSuCau, bX: {p:botPlayerXiu, m:botMoneyXiu}, bT: {p:botPlayerTai, m:botMoneyTai}, bet: {s:currentBetSide, a:currentBetAmount}, tgt: targetPlayers }; localStorage.setItem('TX_SESS_V4', JSON.stringify(data)); }
     function loadData() {
         const saved = localStorage.getItem('TX_SESS_V4');
         if(saved) {
             const d = JSON.parse(saved);
-            userBalance = d.bal; loggedUser = d.user; lichSuCau = d.hist || [];
-            botPlayerXiu = d.bX.p; botMoneyXiu = d.bX.m; botPlayerTai = d.bT.p; botMoneyTai = d.bT.m;
-            targetPlayers = d.tgt;
+            userBalance = d.bal; loggedUser = d.user; lichSuCau = d.hist || []; botPlayerXiu = d.bX.p; botMoneyXiu = d.bX.m; botPlayerTai = d.bT.p; botMoneyTai = d.bT.m; targetPlayers = d.tgt;
             if(loggedUser) { document.getElementById('auth-overlay').style.display="none"; document.getElementById('p-name').innerText = loggedUser; }
-            if(d.bet && d.bet.a > 0) {
-                currentBetSide = d.bet.s; currentBetAmount = d.bet.a;
-                let id = currentBetSide === "Xiu" ? 'bet-xiu-val' : 'bet-tai-val';
-                document.getElementById(id).innerText = currentBetAmount.toLocaleString();
-                document.getElementById(id).style.display = "block";
-            }
+            if(d.bet && d.bet.a > 0) { currentBetSide = d.bet.s; currentBetAmount = d.bet.a; let id = currentBetSide === "Xiu" ? 'bet-xiu-val' : 'bet-tai-val'; document.getElementById(id).innerText = currentBetAmount.toLocaleString(); document.getElementById(id).style.display = "block"; }
         } else {
             for(let i=0; i<15; i++) { let fT = Math.floor(Math.random()*16)+3; lichSuCau.push({side: fT>=11?"Tai":"Xiu", total: fT}); }
             targetPlayers = Math.floor(Math.random() * 5000000) + 5000000;
         }
     }
-
-    function capNhatBalance() {
-        document.getElementById('balance-display').innerText = userBalance.toLocaleString();
-        saveData();
-    }
-
-    function huyCuoc(side) {
-        if ((Math.floor(Date.now()/1000)%73) < 55 && currentBetSide === side) {
-            userBalance += currentBetAmount; currentBetAmount = 0; currentBetSide = "";
-            document.getElementById('bet-xiu-val').style.display = "none";
-            document.getElementById('bet-tai-val').style.display = "none";
-            capNhatBalance();
-        }
-    }
-
-    function moSelector(side) {
-        if((Math.floor(Date.now()/1000)%73) >= 55) return;
-        currentBetSide = side; tempSelectAmount = 0;
-        document.getElementById('select-title').innerText = "CƯỢC " + side.toUpperCase();
-        document.getElementById('temp-amt-view').innerText = "0";
-        document.getElementById('bet-selector-ui').style.display = "flex";
-    }
-
-    function congTien(v) {
-        if(v==='ALL') tempSelectAmount = userBalance; else tempSelectAmount += v;
-        if(tempSelectAmount > userBalance) tempSelectAmount = userBalance;
-        document.getElementById('temp-amt-view').innerText = tempSelectAmount.toLocaleString();
-    }
-
-    function xacNhanCuoc() {
-        if(tempSelectAmount <= 0) return;
-        userBalance -= tempSelectAmount; currentBetAmount += tempSelectAmount;
-        capNhatBalance();
-        let id = currentBetSide === "Xiu" ? 'bet-xiu-val' : 'bet-tai-val';
-        document.getElementById(id).innerText = currentBetAmount.toLocaleString();
-        document.getElementById(id).style.display = "block";
-        dongSelector();
-    }
-
+    function capNhatBalance() { document.getElementById('balance-display').innerText = userBalance.toLocaleString(); saveData(); }
+    function huyCuoc(side) { if ((Math.floor(Date.now()/1000)%73) < 55 && currentBetSide === side) { userBalance += currentBetAmount; currentBetAmount = 0; currentBetSide = ""; document.getElementById('bet-xiu-val').style.display = "none"; document.getElementById('bet-tai-val').style.display = "none"; capNhatBalance(); } }
+    function moSelector(side) { if((Math.floor(Date.now()/1000)%73) >= 55) return; currentBetSide = side; tempSelectAmount = 0; document.getElementById('select-title').innerText = "CƯỢC " + side.toUpperCase(); document.getElementById('temp-amt-view').innerText = "0"; document.getElementById('bet-selector-ui').style.display = "flex"; }
+    function congTien(v) { if(v==='ALL') tempSelectAmount = userBalance; else tempSelectAmount += v; if(tempSelectAmount > userBalance) tempSelectAmount = userBalance; document.getElementById('temp-amt-view').innerText = tempSelectAmount.toLocaleString(); }
+    function xacNhanCuoc() { if(tempSelectAmount <= 0) return; userBalance -= tempSelectAmount; currentBetAmount += tempSelectAmount; capNhatBalance(); let id = currentBetSide === "Xiu" ? 'bet-xiu-val' : 'bet-tai-val'; document.getElementById(id).innerText = currentBetAmount.toLocaleString(); document.getElementById(id).style.display = "block"; dongSelector(); }
     function dongSelector() { document.getElementById('bet-selector-ui').style.display = "none"; }
-
     setInterval(() => {
         const elapsed = Math.floor(Date.now()/1000) % 73;
         if(elapsed < 60) {
-            if(elapsed < 55) {
-                let ease = Math.pow(elapsed / 55, 1.5);
-                botPlayerXiu = Math.floor((targetPlayers/2)*ease); botPlayerTai = Math.floor((targetPlayers/2)*ease);
-                botMoneyXiu += Math.floor(Math.random()*500000); botMoneyTai += Math.floor(Math.random()*500000);
-            }
+            if(elapsed < 55) { let ease = Math.pow(elapsed / 55, 1.5); botPlayerXiu = Math.floor((targetPlayers/2)*ease); botPlayerTai = Math.floor((targetPlayers/2)*ease); botMoneyXiu += Math.floor(Math.random()*500000); botMoneyTai += Math.floor(Math.random()*500000); }
             document.getElementById('timer').innerText = 60 - elapsed;
-            document.getElementById('bot-p-xiu').innerText = botPlayerXiu.toLocaleString();
-            document.getElementById('bot-p-tai').innerText = botPlayerTai.toLocaleString();
+            document.getElementById('bot-p-xiu').innerText = botPlayerXiu.toLocaleString(); document.getElementById('bot-p-tai').innerText = botPlayerTai.toLocaleString();
             document.getElementById('bot-m-xiu').innerText = (botMoneyXiu + (currentBetSide==="Xiu"?currentBetAmount:0)).toLocaleString();
             document.getElementById('bot-m-tai').innerText = (botMoneyTai + (currentBetSide==="Tai"?currentBetAmount:0)).toLocaleString();
-            if(elapsed === 0) {
-                targetPlayers = Math.floor(Math.random() * 5000000) + 5000000;
-                botPlayerXiu=0; botMoneyXiu=0; botPlayerTai=0; botMoneyTai=0;
-                document.querySelectorAll('.my-bet-info').forEach(e => e.style.display="none");
-                document.getElementById('bowl').style.display="none";
-                document.getElementById('res-xiu').style.display="none";
-                document.getElementById('res-tai').style.display="none";
-                daNanBat = false;
-            }
+            if(elapsed === 0) { targetPlayers = Math.floor(Math.random() * 5000000) + 5000000; botPlayerXiu=0; botMoneyXiu=0; botPlayerTai=0; botMoneyTai=0; document.querySelectorAll('.my-bet-info').forEach(e => e.style.display="none"); document.getElementById('bowl').style.display="none"; document.getElementById('res-xiu').style.display="none"; document.getElementById('res-tai').style.display="none"; daNanBat = false; }
         } else if (elapsed < 70) {
             document.getElementById('timer').innerText = 70 - elapsed;
-            if (elapsed === 60) {
-                ketQuaHienTai = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
-                document.querySelectorAll('.dice').forEach((d, i) => d.innerText = ketQuaHienTai[i]);
-                document.getElementById('bowl').style.display = "block";
-            }
+            if (elapsed === 60) { ketQuaHienTai = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1]; document.querySelectorAll('.dice').forEach((d, i) => d.innerText = ketQuaHienTai[i]); document.getElementById('bowl').style.display = "block"; }
             if (elapsed === 69 && !daNanBat) moBat();
         }
     }, 1000);
-
     function moBat() {
-        if(daNanBat) return; daNanBat = true;
-        document.getElementById('bowl').style.display = "none";
-        const sum = ketQuaHienTai.reduce((a,b)=>a+b, 0);
-        const win = sum >= 11 ? "Tai" : "Xiu";
+        if(daNanBat) return; daNanBat = true; document.getElementById('bowl').style.display = "none";
+        const sum = ketQuaHienTai.reduce((a,b)=>a+b, 0); const win = sum >= 11 ? "Tai" : "Xiu";
         lichSuCau.push({side: win, total: sum}); if(lichSuCau.length > 15) lichSuCau.shift();
-        
         let node = currentBetSide === "Xiu" ? document.getElementById('bet-xiu-val') : document.getElementById('bet-tai-val');
         if(currentBetAmount > 0) {
-            if(currentBetSide === win) {
-                userBalance += currentBetAmount * 1.95;
-                node.innerText = "+" + Math.floor(currentBetAmount * 1.95).toLocaleString();
-                node.style.background = "var(--green)"; node.style.color="#fff";
-            } else {
-                node.innerText = "-" + currentBetAmount.toLocaleString();
-                node.style.background = "var(--red)"; node.style.color="#fff";
-            }
+            if(currentBetSide === win) { userBalance += currentBetAmount * 1.95; node.innerText = "+" + Math.floor(currentBetAmount * 1.95).toLocaleString(); node.style.background = "var(--green)"; node.style.color="#fff"; }
+            else { node.innerText = "-" + currentBetAmount.toLocaleString(); node.style.background = "var(--red)"; node.style.color="#fff"; }
         }
-        document.getElementById('res-'+win.toLowerCase()).innerText = win.toUpperCase()+" ("+sum+")";
-        document.getElementById('res-'+win.toLowerCase()).style.display = "block";
+        document.getElementById('res-'+win.toLowerCase()).innerText = win.toUpperCase()+" ("+sum+")"; document.getElementById('res-'+win.toLowerCase()).style.display = "block";
         currentBetAmount = 0; currentBetSide = ""; capNhatBalance();
     }
-
     function moSoiCau() { document.getElementById('popup-soicau').style.display = "flex"; setTimeout(drawCau, 200); }
     function closePopup(id) { document.getElementById(id).style.display = "none"; }
     function drawCau() {
-        const cv = document.getElementById('canvas-soicau'); const ctx = cv.getContext('2d');
-        cv.width = cv.offsetWidth; cv.height = cv.offsetHeight;
-        const sx = cv.width/15, ah = cv.height - 40;
-        ctx.beginPath(); ctx.strokeStyle = "#f1c40f"; ctx.lineWidth = 2;
-        lichSuCau.forEach((d, i) => {
-            let x = i*sx + sx/2, y = 20 + ah - ((d.total-3)/15 * ah);
-            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-        });
-        ctx.stroke();
-        lichSuCau.forEach((d, i) => {
-            let x = i*sx + sx/2, y = 20 + ah - ((d.total-3)/15 * ah);
-            ctx.fillStyle = d.side === "Tai" ? "#2ecc71" : "#e74c3c";
-            ctx.beginPath(); ctx.arc(x,y,11,0,Math.PI*2); ctx.fill();
-            ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
-            ctx.fillText(d.total, x, y);
-        });
+        const cv = document.getElementById('canvas-soicau'); const ctx = cv.getContext('2d'); cv.width = cv.offsetWidth; cv.height = cv.offsetHeight;
+        const sx = cv.width/15, ah = cv.height - 40; ctx.beginPath(); ctx.strokeStyle = "#f1c40f"; ctx.lineWidth = 2;
+        lichSuCau.forEach((d, i) => { let x = i*sx + sx/2, y = 20 + ah - ((d.total-3)/15 * ah); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.stroke();
+        lichSuCau.forEach((d, i) => { let x = i*sx + sx/2, y = 20 + ah - ((d.total-3)/15 * ah); ctx.fillStyle = d.side === "Tai" ? "#2ecc71" : "#e74c3c"; ctx.beginPath(); ctx.arc(x,y,11,0,Math.PI*2); ctx.fill(); ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(d.total, x, y); });
     }
-
     const bowl = document.getElementById('bowl'); let isMove = false;
     bowl.onpointerdown = (e) => { isMove = true; bowl.setPointerCapture(e.pointerId); };
-    bowl.onpointermove = (e) => {
-        if(!isMove) return;
-        const r = document.getElementById('plate').getBoundingClientRect();
-        let x = e.clientX - r.left - 100, y = e.clientY - r.top - 100;
-        bowl.style.transform = `translate(${x}px, ${y}px)`;
-        if(Math.abs(x)>100 || Math.abs(y)>100) { isMove=false; moBat(); }
-    };
+    bowl.onpointermove = (e) => { if(!isMove) return; const r = document.getElementById('plate').getBoundingClientRect(); let x = e.clientX - r.left - 100, y = e.clientY - r.top - 100; bowl.style.transform = `translate(${x}px, ${y}px)`; if(Math.abs(x)>100 || Math.abs(y)>100) { isMove=false; moBat(); } };
     bowl.onpointerup = () => { isMove=false; bowl.style.transform="translate(0,0)"; };
-
     window.onload = () => { loadData(); capNhatBalance(); };
 </script>
 </body>
