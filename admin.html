@@ -1,95 +1,48 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý Giftcode - Tài Xỉu</title>
+    <title>Trang Quản Trị Giftcode</title>
     <style>
-        body { background: #0d0d0d; color: white; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .box { background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #f1c40f; width: 100%; max-width: 500px; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
-        button { width: 100%; padding: 12px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; }
-        table { width: 100%; max-width: 800px; border-collapse: collapse; margin-top: 20px; background: #1a1a1a; }
-        th, td { border: 1px solid #333; padding: 12px; text-align: center; }
-        th { background: #222; color: #f1c40f; }
-        .copy-btn { background: #2ecc71; padding: 5px 10px; font-size: 12px; width: auto; margin: 2px; }
-        .del-btn { background: #e74c3c; padding: 5px 10px; font-size: 12px; width: auto; margin: 2px; }
+        body { background: #111; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
+        .form { background: #222; padding: 20px; border: 1px solid gold; display: inline-block; border-radius: 10px; }
+        input { display: block; width: 300px; margin: 10px 0; padding: 10px; background: #333; color: white; border: 1px solid #444; }
+        button { width: 100%; padding: 10px; background: gold; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h2 style="color:#f1c40f">HỆ THỐNG TẠO GIFTCODE</h2>
-    
-    <div class="box">
-        <input type="text" id="makhau" placeholder="Nhập mã code (VD: TANTHU88)">
-        <input type="number" id="money" placeholder="Giá trị tiền (VND)">
-        <input type="number" id="devices" placeholder="Số lượng thiết bị tối đa">
-        <input type="number" id="perAcc" placeholder="Số lượt nhập/1 tài khoản">
-        <button onclick="createCode()">XÁC NHẬN TẠO CODE</button>
+    <h2>TẠO GIFTCODE HỆ THỐNG</h2>
+    <div class="form">
+        <input type="text" id="c_name" placeholder="Mã Code (VD: TANTHU88)">
+        <input type="number" id="c_val" placeholder="Giá trị tiền (VND)">
+        <input type="number" id="c_dev" placeholder="Số thiết bị được nhập tối đa">
+        <input type="number" id="c_per" placeholder="Số lần nhập / 1 tài khoản">
+        <button onclick="createCode()">XÁC NHẬN TẠO</button>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>CODE</th>
-                <th>GIÁ TRỊ</th>
-                <th>LƯỢT NHẬP</th>
-                <th>HÀNH ĐỘNG</th>
-            </tr>
-        </thead>
-        <tbody id="list-codes"></tbody>
-    </table>
-
     <script>
-        // THAY ĐƯỜNG LINK FIREBASE CỦA BẠN VÀO ĐÂY
-        const DB_URL = "https://your-project-default-rtdb.firebaseio.com/codes";
+        // THAY LINK FIREBASE CỦA BẠN VÀO ĐÂY
+        const FIREBASE_URL = "https://hethongcode-7a64c-default-rtdb.asia-southeast1.firebasedatabase.app/giftcodes";
 
         async function createCode() {
-            let code = document.getElementById('makhau').value.trim().toUpperCase();
-            let val = document.getElementById('money').value;
-            let dev = document.getElementById('devices').value;
-            let acc = document.getElementById('perAcc').value;
+            let name = document.getElementById('c_name').value.trim().toUpperCase();
+            let val = document.getElementById('c_val').value;
+            let dev = document.getElementById('c_dev').value;
+            let per = document.getElementById('c_per').value;
 
-            if(!code || !val || !dev || !acc) return alert("Vui lòng nhập đủ thông tin!");
+            if(!name || !val) return alert("Vui lòng nhập đủ thông tin!");
 
-            let data = {
-                value: parseInt(val),
-                maxDevices: parseInt(dev),
-                usedDevices: 0,
-                maxPerAccount: parseInt(acc)
-            };
-
-            await fetch(`${DB_URL}/${code}.json`, { method: 'PUT', body: JSON.stringify(data) });
-            alert("Tạo code thành công!");
-            loadCodes();
+            await fetch(`${FIREBASE_URL}/${name}.json`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    money: parseInt(val),
+                    maxDevices: parseInt(dev),
+                    used: 0,
+                    maxPerAcc: parseInt(per)
+                })
+            });
+            alert("Đã tạo mã " + name + " thành công!");
         }
-
-        async function loadCodes() {
-            let res = await fetch(`${DB_URL}.json`);
-            let data = await res.json();
-            let html = "";
-            for (let key in data) {
-                if(!data[key]) continue;
-                if(data[key].usedDevices >= data[key].maxDevices) {
-                    deleteCode(key); continue;
-                }
-                html += `<tr>
-                    <td><b>${key}</b></td>
-                    <td style="color:#2ecc71">${data[key].value.toLocaleString()}</td>
-                    <td>${data[key].usedDevices}/${data[key].maxDevices}</td>
-                    <td>
-                        <button class="copy-btn" onclick="navigator.clipboard.writeText('${key}')">Copy</button>
-                        <button class="del-btn" onclick="deleteCode('${key}')">Xóa</button>
-                    </td>
-                </tr>`;
-            }
-            document.getElementById('list-codes').innerHTML = html;
-        }
-
-        async function deleteCode(code) {
-            await fetch(`${DB_URL}/${code}.json`, { method: 'DELETE' });
-            loadCodes();
-        }
-        setInterval(loadCodes, 5000);
-        loadCodes();
     </script>
 </body>
 </html>

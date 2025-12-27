@@ -258,38 +258,44 @@
    // Thay thế hàm doGift cũ
 async function doGift() {
     let code = document.getElementById('g-code').value.trim().toUpperCase();
-    if(!code) return alert("Vui lòng nhập mã!");
+    if(!code) return alert("Bạn chưa nhập mã!");
 
-    const DB_URL = "https://your-project-default-rtdb.firebaseio.com/codes"; // Dùng chung link với admin.html
-    
+    // DÙNG CHUNG LINK VỚI TRANG ADMIN Ở BƯỚC 2
+    const FIREBASE_URL = "https://hethongcode-7a64c-default-rtdb.asia-southeast1.firebasedatabase.app/giftcodes";
+
     try {
-        let response = await fetch(`${DB_URL}/${code}.json`);
+        let response = await fetch(`${FIREBASE_URL}/${code}.json`);
         let data = await response.json();
 
         if (data) {
-            // Kiểm tra số lượng thiết bị
-            if (data.usedDevices >= data.maxDevices) return alert("Mã này đã hết lượt sử dụng!");
+            // 1. Kiểm tra tổng số thiết bị đã dùng mã này
+            if (data.used >= data.maxDevices) return alert("Mã này đã hết lượt dùng trên toàn hệ thống!");
 
-            // Kiểm tra trùng tài khoản (Local)
-            let check = localStorage.getItem(`used_${code}_${loggedUser}`);
-            if (check && parseInt(check) >= data.maxPerAccount) return alert("Tài khoản này đã dùng mã này rồi!");
+            // 2. Kiểm tra tài khoản này đã dùng mã này chưa (lưu trong máy người dùng)
+            let userUsed = localStorage.getItem(`used_${code}_${loggedUser}`) || 0;
+            if (parseInt(userUsed) >= data.maxPerAcc) return alert("Tài khoản của bạn đã dùng mã này rồi!");
 
-            // Thực hiện cộng tiền
-            userBalance += data.value;
+            // 3. Cộng tiền vào số dư
+            userBalance += data.money;
             capNhatBalance();
 
-            // Cập nhật số lượt đã dùng lên Server
-            await fetch(`${DB_URL}/${code}.json`, {
+            // 4. Cập nhật lượt dùng lên Firebase cho cả hệ thống biết
+            await fetch(`${FIREBASE_URL}/${code}.json`, {
                 method: 'PATCH',
-                body: JSON.stringify({ usedDevices: data.usedDevices + 1 })
+                body: JSON.stringify({ used: data.used + 1 })
             });
 
-            localStorage.setItem(`used_${code}_${loggedUser}`, 1);
-            alert("Nhận thành công " + data.value.toLocaleString() + " VND");
+            // 5. Đánh dấu tài khoản này đã dùng mã
+            localStorage.setItem(`used_${code}_${loggedUser}`, parseInt(userUsed) + 1);
+
+            alert("Chúc mừng! Bạn nhận được " + data.money.toLocaleString() + " VND");
+            closeUserPanel();
         } else {
-            alert("Mã không tồn tại!");
+            alert("Mã Giftcode không tồn tại!");
         }
-    } catch (e) { alert("Lỗi kết nối máy chủ Giftcode!"); }
+    } catch (e) {
+        alert("Lỗi kết nối máy chủ Giftcode!");
+    }
 }
 
     // --- LOGIC GAME GỐC (GIỮ NGUYÊN) ---
