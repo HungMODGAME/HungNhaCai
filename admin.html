@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Giftcode - Tài Xỉu</title>
+    <style>
+        body { background: #0d0d0d; color: white; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .box { background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #f1c40f; width: 100%; max-width: 500px; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
+        button { width: 100%; padding: 12px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; }
+        table { width: 100%; max-width: 800px; border-collapse: collapse; margin-top: 20px; background: #1a1a1a; }
+        th, td { border: 1px solid #333; padding: 12px; text-align: center; }
+        th { background: #222; color: #f1c40f; }
+        .copy-btn { background: #2ecc71; padding: 5px 10px; font-size: 12px; width: auto; margin: 2px; }
+        .del-btn { background: #e74c3c; padding: 5px 10px; font-size: 12px; width: auto; margin: 2px; }
+    </style>
+</head>
+<body>
+    <h2 style="color:#f1c40f">HỆ THỐNG TẠO GIFTCODE</h2>
+    
+    <div class="box">
+        <input type="text" id="makhau" placeholder="Nhập mã code (VD: TANTHU88)">
+        <input type="number" id="money" placeholder="Giá trị tiền (VND)">
+        <input type="number" id="devices" placeholder="Số lượng thiết bị tối đa">
+        <input type="number" id="perAcc" placeholder="Số lượt nhập/1 tài khoản">
+        <button onclick="createCode()">XÁC NHẬN TẠO CODE</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>CODE</th>
+                <th>GIÁ TRỊ</th>
+                <th>LƯỢT NHẬP</th>
+                <th>HÀNH ĐỘNG</th>
+            </tr>
+        </thead>
+        <tbody id="list-codes"></tbody>
+    </table>
+
+    <script>
+        // THAY ĐƯỜNG LINK FIREBASE CỦA BẠN VÀO ĐÂY
+        const DB_URL = "https://your-project-default-rtdb.firebaseio.com/codes";
+
+        async function createCode() {
+            let code = document.getElementById('makhau').value.trim().toUpperCase();
+            let val = document.getElementById('money').value;
+            let dev = document.getElementById('devices').value;
+            let acc = document.getElementById('perAcc').value;
+
+            if(!code || !val || !dev || !acc) return alert("Vui lòng nhập đủ thông tin!");
+
+            let data = {
+                value: parseInt(val),
+                maxDevices: parseInt(dev),
+                usedDevices: 0,
+                maxPerAccount: parseInt(acc)
+            };
+
+            await fetch(`${DB_URL}/${code}.json`, { method: 'PUT', body: JSON.stringify(data) });
+            alert("Tạo code thành công!");
+            loadCodes();
+        }
+
+        async function loadCodes() {
+            let res = await fetch(`${DB_URL}.json`);
+            let data = await res.json();
+            let html = "";
+            for (let key in data) {
+                if(!data[key]) continue;
+                if(data[key].usedDevices >= data[key].maxDevices) {
+                    deleteCode(key); continue;
+                }
+                html += `<tr>
+                    <td><b>${key}</b></td>
+                    <td style="color:#2ecc71">${data[key].value.toLocaleString()}</td>
+                    <td>${data[key].usedDevices}/${data[key].maxDevices}</td>
+                    <td>
+                        <button class="copy-btn" onclick="navigator.clipboard.writeText('${key}')">Copy</button>
+                        <button class="del-btn" onclick="deleteCode('${key}')">Xóa</button>
+                    </td>
+                </tr>`;
+            }
+            document.getElementById('list-codes').innerHTML = html;
+        }
+
+        async function deleteCode(code) {
+            await fetch(`${DB_URL}/${code}.json`, { method: 'DELETE' });
+            loadCodes();
+        }
+        setInterval(loadCodes, 5000);
+        loadCodes();
+    </script>
+</body>
+</html>
