@@ -5,54 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tài Xỉu Live - Pro Multi-Device</title>
     <style>
-        /* GIỮ NGUYÊN TOÀN BỘ CSS CỦA BẠN */
-        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --bg: #0d0d0d; --card: #1a1a1a; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; user-select: none; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
-        #rotate-warning { display: none; position: fixed; inset: 0; background: #000; z-index: 99999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #rotate-warning .icon { font-size: 60px; animation: rotatePhone 2s infinite; }
-        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
-        @media screen and (orientation: portrait) and (max-width: 1024px) { #rotate-warning { display: flex; } }
-        .header { height: 60px; background: #111; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); flex-shrink: 0; z-index: 100; }
-        .game-main-horizontal { flex: 1; display: flex; align-items: center; justify-content: space-around; padding: 10px; gap: 10px; background: radial-gradient(circle, #222 0%, #000 100%); }
-        .side-bet-container { width: 25%; max-width: 230px; display: flex; flex-direction: column; gap: 8px; position: relative; }
-        .center-container { width: 40%; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; }
-        @media (max-height: 500px) { .header { height: 45px; } #timer { font-size: 2.5rem !important; margin-bottom: 0 !important; } .plate-area { width: 140px !important; height: 140px !important; } .dice { width: 30px !important; height: 30px !important; line-height: 30px !important; font-size: 1.2rem !important; } .bet-box { padding: 5px !important; } }
-        #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; }
-        .auth-box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--gold); width: 320px; text-align: center; }
-        .auth-input { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
-        .balance-box { color: var(--gold); font-weight: bold; font-family: monospace; font-size: 1.2rem; }
-        .user-icon, .sc-icon, .audio-icon { width: 45px; height: 45px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--gold); cursor: pointer; transition: 0.3s; }
-        .audio-icon:active { transform: scale(0.9); }
-        .user-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; align-items: center; justify-content: center; }
-        .panel-card { background: var(--card); width: 95%; max-width: 400px; border-radius: 20px; border: 1px solid #333; overflow: hidden; }
-        .panel-tabs { display: flex; background: #111; }
-        .p-tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; color: #666; font-weight: bold; border-bottom: 2px solid transparent; }
-        .p-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
-        .p-content { padding: 20px; display: none; }
-        .p-content.active { display: block; }
-        #withdraw-loading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9000; flex-direction: column; align-items: center; justify-content: center; }
-        .loader { border: 5px solid #333; border-top: 5px solid var(--gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #video-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; align-items: center; justify-content: center; }
-        #withdraw-video { width: 100%; max-height: 100vh; }
-        #timer { font-size: 4rem; color: var(--red); font-weight: 900; margin-bottom: 5px; }
-        .plate-area { position: relative; width: 200px; height: 200px; background: #fff; border-radius: 50%; border: 8px solid #2c3e50; display: flex; justify-content: center; align-items: center; }
-        .dice { width: 42px; height: 42px; color: black; line-height: 42px; font-weight: bold; font-size: 1.8rem; margin: 0 20px; text-align: center; }
-        #bowl { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 30% 30%, #555, #000); border-radius: 50%; z-index: 10; cursor: grab; touch-action: none; }
-        .bet-box { background: rgba(30, 30, 30, 0.9); border: 2px solid #444; border-radius: 15px; padding: 12px; text-align: center; position: relative; cursor: pointer; }
-        .my-bet-info { background: var(--gold); color: #000; font-size: 0.8rem; font-weight: bold; padding: 3px 10px; border-radius: 5px; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); display: none; }
-        .total-money { color: var(--gold); font-weight: bold; font-size: 1.1rem; }
-        .cancel-btn { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #888; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .bet-selector { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; }
-        .selector-card { background: #1a1a1a; padding: 25px; border-radius: 20px; border: 2px solid var(--gold); width: 300px; text-align: center; }
-        .amt-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .amt-btn { padding: 10px; background: #333; color: white; border: none; border-radius: 8px; font-weight: bold; }
-        .popup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
-        .card { background: #1a1a1a; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; border: 1px solid #333; }
-        .bank-suggest { position: absolute; background: #222; border: 1px solid #444; width: 100%; max-height: 120px; overflow-y: auto; z-index: 10; display: none; }
-        .bank-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; font-size: 0.9rem; }
-    </style>
+    /* 1. GIỮ NGUYÊN CSS GỐC CHO PC */
+    :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --bg: #0d0d0d; --card: #1a1a1a; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; user-select: none; }
+    body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
+    
+    .header { height: 60px; background: #111; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); flex-shrink: 0; z-index: 100; }
+    .game-main-horizontal { flex: 1; display: flex; align-items: center; justify-content: space-around; padding: 10px; gap: 10px; background: radial-gradient(circle, #222 0%, #000 100%); }
+    .side-bet-container { width: 25%; max-width: 230px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+    .center-container { width: 40%; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; }
+    
+    #timer { font-size: 4rem; color: var(--red); font-weight: 900; margin-bottom: 5px; }
+    .plate-area { position: relative; width: 200px; height: 200px; background: #fff; border-radius: 50%; border: 8px solid #2c3e50; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+    .dice { width: 42px; height: 42px; color: black; line-height: 42px; font-weight: bold; font-size: 1.8rem; margin: 0 20px; text-align: center; }
+    #bowl { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 30% 30%, #555, #000); border-radius: 50%; z-index: 10; cursor: grab; touch-action: none; }
+    
+    .bet-box { background: rgba(30, 30, 30, 0.9); border: 2px solid #444; border-radius: 15px; padding: 12px; text-align: center; position: relative; cursor: pointer; }
+    .total-money { color: var(--gold); font-weight: bold; font-size: 1.1rem; }
+    .amt-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+
+    /* 2. CHỈ CẢI THIỆN TRÊN ĐIỆN THOẠI (Xoay ngang hoặc màn hình nhỏ) */
+    @media (max-height: 500px) {
+        /* Thu nhỏ Header */
+        .header { height: 45px; padding: 0 10px; }
+        .balance-box { font-size: 1rem; }
+        .user-icon, .sc-icon, .audio-icon { width: 35px; height: 35px; font-size: 0.9rem; }
+
+        /* Thu nhỏ khu vực chơi chính */
+        .game-main-horizontal { padding: 5px; gap: 5px; }
+        #timer { font-size: 2.5rem !important; margin-bottom: 0 !important; }
+        .plate-area { width: 140px !important; height: 140px !important; border-width: 5px !important; }
+        .dice { width: 30px !important; height: 30px !important; line-height: 30px !important; font-size: 1.2rem !important; margin: 0 10px !important; }
+        
+        /* Thu nhỏ các ô cược */
+        .bet-box { padding: 5px !important; border-radius: 10px; }
+        .bet-box div[style*="font-size:2.2rem"] { font-size: 1.5rem !important; line-height: 1.2; }
+        .total-money { font-size: 0.9rem !important; }
+        .cancel-btn { padding: 5px; font-size: 0.7rem; margin-top: 2px; }
+        .side-bet-container { gap: 4px; }
+
+        /* Tối ưu bảng chọn tiền: Chuyển sang 5 cột để không bị dài quá màn hình */
+        .bet-selector .selector-card { width: 95vw; max-width: 500px; padding: 10px; }
+        .amt-btn-group { grid-template-columns: repeat(5, 1fr) !important; gap: 5px; margin: 8px 0; }
+        .amt-btn { padding: 8px 2px; font-size: 0.8rem; }
+        #temp-amt-view { font-size: 1.5rem !important; margin: 5px 0 !important; }
+    }
+
+    /* GIỮ NGUYÊN CÁC CSS CHỨC NĂNG KHÁC */
+    #rotate-warning { display: none; position: fixed; inset: 0; background: #000; z-index: 99999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+    #rotate-warning .icon { font-size: 60px; animation: rotatePhone 2s infinite; }
+    @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+    @media screen and (orientation: portrait) and (max-width: 1024px) { #rotate-warning { display: flex; } }
+    #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+    .auth-box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--gold); width: 320px; text-align: center; }
+    .auth-input { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
+    .user-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; align-items: center; justify-content: center; }
+    .panel-card { background: var(--card); width: 95%; max-width: 400px; border-radius: 20px; border: 1px solid #333; overflow: hidden; }
+    .panel-tabs { display: flex; background: #111; }
+    .p-tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; color: #666; font-weight: bold; border-bottom: 2px solid transparent; }
+    .p-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .p-content { padding: 20px; display: none; }
+    .p-content.active { display: block; }
+    #withdraw-loading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9000; flex-direction: column; align-items: center; justify-content: center; }
+    .loader { border: 5px solid #333; border-top: 5px solid var(--gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    #video-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; align-items: center; justify-content: center; }
+    .my-bet-info { background: var(--gold); color: #000; font-size: 0.8rem; font-weight: bold; padding: 3px 10px; border-radius: 5px; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); display: none; }
+    .bet-selector { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; }
+    .selector-card { background: #1a1a1a; padding: 25px; border-radius: 20px; border: 2px solid var(--gold); width: 300px; text-align: center; }
+    .amt-btn { padding: 10px; background: #333; color: white; border: none; border-radius: 8px; font-weight: bold; }
+    .popup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
+    .card { background: #1a1a1a; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; border: 1px solid #333; }
+    .bank-suggest { position: absolute; background: #222; border: 1px solid #444; width: 100%; max-height: 120px; overflow-y: auto; z-index: 10; display: none; }
+    .bank-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; font-size: 0.9rem; }
+</style>
 </head>
 <body>
 
