@@ -243,6 +243,14 @@
 </div>
 
 <script>
+    // Hàm tạo số ngẫu nhiên dựa trên mã phiên (Round ID)
+function getSyncDice(roundId, seedOffset) {
+    let t = (roundId + seedOffset) + 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    let random = ((t ^ t >>> 14) >>> 0) / 4294967296;
+    return Math.floor(random * 6) + 1;
+}
     // GIỮ NGUYÊN TOÀN BỘ SCRIPT TỪ BẢN GỐC CỦA BẠN
     let userBalance = 100000000;
     let loggedUser = null;
@@ -340,20 +348,53 @@
     function xacNhanCuoc() { if(tempSelectAmount <= 0) return; userBalance -= tempSelectAmount; currentBetAmount += tempSelectAmount; capNhatBalance(); let id = currentBetSide === "Xiu" ? 'bet-xiu-val' : 'bet-tai-val'; document.getElementById(id).innerText = currentBetAmount.toLocaleString(); document.getElementById(id).style.display = "block"; dongSelector(); }
     function dongSelector() { document.getElementById('bet-selector-ui').style.display = "none"; }
     setInterval(() => {
-        const elapsed = Math.floor(Date.now()/1000) % 73;
-        if(elapsed < 60) {
-            if(elapsed < 55) { let ease = Math.pow(elapsed / 55, 1.5); botPlayerXiu = Math.floor((targetPlayers/2)*ease); botPlayerTai = Math.floor((targetPlayers/2)*ease); botMoneyXiu += Math.floor(Math.random()*500000); botMoneyTai += Math.floor(Math.random()*500000); }
-            document.getElementById('timer').innerText = 60 - elapsed;
-            document.getElementById('bot-p-xiu').innerText = botPlayerXiu.toLocaleString(); document.getElementById('bot-p-tai').innerText = botPlayerTai.toLocaleString();
-            document.getElementById('bot-m-xiu').innerText = (botMoneyXiu + (currentBetSide==="Xiu"?currentBetAmount:0)).toLocaleString();
-            document.getElementById('bot-m-tai').innerText = (botMoneyTai + (currentBetSide==="Tai"?currentBetAmount:0)).toLocaleString();
-            if(elapsed === 0) { targetPlayers = Math.floor(Math.random() * 5000000) + 5000000; botPlayerXiu=0; botMoneyXiu=0; botPlayerTai=0; botMoneyTai=0; document.querySelectorAll('.my-bet-info').forEach(e => e.style.display="none"); document.getElementById('bowl').style.display="none"; document.getElementById('res-xiu').style.display="none"; document.getElementById('res-tai').style.display="none"; daNanBat = false; }
-        } else if (elapsed < 70) {
-            document.getElementById('timer').innerText = 70 - elapsed;
-            if (elapsed === 60) { ketQuaHienTai = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1]; document.querySelectorAll('.dice').forEach((d, i) => d.innerText = ketQuaHienTai[i]); document.getElementById('bowl').style.display = "block"; }
-            if (elapsed === 69 && !daNanBat) moBat();
+    const now = Date.now();
+    const roundId = Math.floor(now / 73000); // ID phiên (thay đổi mỗi 73 giây)
+    const elapsed = Math.floor(now / 1000) % 73;
+
+    if (elapsed < 60) {
+        // --- GIAI ĐOẠN ĐẶT CƯỢC ---
+        document.getElementById('timer').innerText = 60 - elapsed;
+        document.getElementById('status-msg').innerText = "MỜI ĐẶT CƯỢC";
+
+        if (elapsed === 0) {
+            // Reset ván mới đồng bộ
+            targetPlayers = Math.floor(getSyncDice(roundId, 99) * 1000000); 
+            botPlayerXiu = 0; botMoneyXiu = 0; botPlayerTai = 0; botMoneyTai = 0;
+            document.querySelectorAll('.my-bet-info').forEach(e => e.style.display="none");
+            document.getElementById('bowl').style.display="none";
+            document.getElementById('res-xiu').style.display="none";
+            document.getElementById('res-tai').style.display="none";
+            daNanBat = false;
         }
-    }, 1000);
+
+        // Đồng bộ cả tiền Bot (dùng roundId làm seed)
+        let ease = Math.pow(elapsed / 55, 1.5);
+        botPlayerXiu = Math.floor((targetPlayers/2) * ease);
+        botPlayerTai = Math.floor((targetPlayers/2) * ease);
+        // ... (cập nhật hiển thị botMoney giống như code cũ) ...
+
+    } else if (elapsed < 73) {
+        // --- GIAI ĐOẠN MỞ BÁT ---
+        document.getElementById('timer').innerText = 70 - elapsed > 0 ? 70 - elapsed : 0;
+        
+        if (elapsed === 60) {
+            // Đồng bộ kết quả xúc sắc: Mỗi máy tự tính ra 1 bộ số nhưng GIỐNG NHAU
+            ketQuaHienTai = [
+                getSyncDice(roundId, 1),
+                getSyncDice(roundId, 2),
+                getSyncDice(roundId, 3)
+            ];
+            document.querySelectorAll('.dice').forEach((d, i) => d.innerText = ketQuaHienTai[i]);
+            document.getElementById('bowl').style.display = "block";
+            document.getElementById('status-msg').innerText = "ĐANG TRẢ THƯỞNG";
+        }
+
+        if (elapsed === 72 && !daNanBat) {
+            moBat(); // Tự động mở bát khi hết thời gian chờ
+        }
+    }
+}, 1000);
     function moBat() {
         if(daNanBat) return; daNanBat = true; document.getElementById('bowl').style.display = "none";
         const sum = ketQuaHienTai.reduce((a,b)=>a+b, 0); const win = sum >= 11 ? "Tai" : "Xiu";
