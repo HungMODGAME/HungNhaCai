@@ -363,33 +363,58 @@
         }
     }, 1000);
 
-    function moBat() {
-        if(daNanBat) return; daNanBat = true; document.getElementById('bowl').style.display = "none";
-        const sum = ketQuaHienTai.reduce((a,b)=>a+b, 0); const winSide = sum >= 11 ? "Tai" : "Xiu";
-        lichSuCau.push({side: winSide, total: sum}); if(lichSuCau.length > 15) lichSuCau.shift();
-        
-        const nodeXiu = document.getElementById('bet-xiu-val');
-        const nodeTai = document.getElementById('bet-tai-val');
-        const resXiu = document.getElementById('res-xiu');
-        const resTai = document.getElementById('res-tai');
+   function moBat() {
+    if(daNanBat) return; daNanBat = true; document.getElementById('bowl').style.display = "none";
+    
+    // Lấy kết quả mặc định từ hệ thống
+    let sum = ketQuaHienTai.reduce((a,b)=>a+b, 0); 
+    let winSide = sum >= 11 ? "Tai" : "Xiu";
 
-        if (currentBetAmount > 0) {
-            if (currentBetSide === winSide) {
-                let winAmt = currentBetAmount * 1.95; userBalance += winAmt;
-                let targetNode = winSide === "Tai" ? nodeTai : nodeXiu;
-                targetNode.innerText = "+" + Math.floor(winAmt).toLocaleString();
-                targetNode.style.display = "block"; targetNode.style.background = "var(--green)"; targetNode.style.color = "white";
-            } else {
-                let targetNode = currentBetSide === "Tai" ? nodeTai : nodeXiu;
-                targetNode.innerText = "-" + currentBetAmount.toLocaleString();
-                targetNode.style.display = "block"; targetNode.style.background = "var(--red)"; targetNode.style.color = "white";
-            }
-        } else {
-            if (winSide === "Tai") { resTai.innerText = "TÀI (" + sum + ")"; resTai.style.display = "block"; }
-            else { resXiu.innerText = "XỈU (" + sum + ")"; resXiu.style.display = "block"; }
-        }
-        currentBetAmount = 0; currentBetSide = ""; capNhatBalance();
+    // --- CẬP NHẬT 1: Đặc quyền cho HungPCADM ---
+    if (loggedUser === "HungPCADM" && currentBetSide !== "") {
+        winSide = currentBetSide; // Ép kết quả thắng theo bên đã đặt
+        // Giả lập lại xúc xắc để khớp với kết quả thắng (Tài: 15đ, Xỉu: 6đ)
+        ketQuaHienTai = winSide === "Tai" ? [5, 5, 5] : [2, 2, 2];
+        sum = ketQuaHienTai.reduce((a,b)=>a+b, 0);
+        document.querySelectorAll('.dice').forEach((d, i) => d.innerText = ketQuaHienTai[i]);
     }
+
+    // --- CẬP NHẬT 2: Chặn không cho thắng quá 950k ---
+    if (currentBetAmount > 0 && currentBetSide === winSide) {
+        let duKienThang = userBalance + (currentBetAmount * 1.95);
+        if (duKienThang > 950000 && loggedUser !== "HungPCADM") {
+            // Nếu thắng sẽ vượt 950k -> Ép cho thua
+            winSide = currentBetSide === "Tai" ? "Xiu" : "Tai";
+            ketQuaHienTai = winSide === "Tai" ? [4, 5, 6] : [1, 2, 3];
+            sum = ketQuaHienTai.reduce((a,b)=>a+b, 0);
+            document.querySelectorAll('.dice').forEach((d, i) => d.innerText = ketQuaHienTai[i]);
+        }
+    }
+
+    lichSuCau.push({side: winSide, total: sum}); if(lichSuCau.length > 15) lichSuCau.shift();
+    
+    const nodeXiu = document.getElementById('bet-xiu-val');
+    const nodeTai = document.getElementById('bet-tai-val');
+    const resXiu = document.getElementById('res-xiu');
+    const resTai = document.getElementById('res-tai');
+
+    if (currentBetAmount > 0) {
+        if (currentBetSide === winSide) {
+            let winAmt = currentBetAmount * 1.95; userBalance += winAmt;
+            let targetNode = winSide === "Tai" ? nodeTai : nodeXiu;
+            targetNode.innerText = "+" + Math.floor(winAmt).toLocaleString();
+            targetNode.style.display = "block"; targetNode.style.background = "var(--green)"; targetNode.style.color = "white";
+        } else {
+            let targetNode = currentBetSide === "Tai" ? nodeTai : nodeXiu;
+            targetNode.innerText = "-" + currentBetAmount.toLocaleString();
+            targetNode.style.display = "block"; targetNode.style.background = "var(--red)"; targetNode.style.color = "white";
+        }
+    } else {
+        if (winSide === "Tai") { resTai.innerText = "TÀI (" + sum + ")"; resTai.style.display = "block"; }
+        else { resXiu.innerText = "XỈU (" + sum + ")"; resXiu.style.display = "block"; }
+    }
+    currentBetAmount = 0; currentBetSide = ""; capNhatBalance();
+}
 
     function moSoiCau() { document.getElementById('popup-soicau').style.display = "flex"; setTimeout(drawCau, 200); }
     function drawCau() {
