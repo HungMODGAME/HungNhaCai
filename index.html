@@ -364,56 +364,98 @@
     }, 1000);
 
    function moBat() {
-    if(daNanBat) return; daNanBat = true; document.getElementById('bowl').style.display = "none";
+    if(daNanBat) return; 
+    daNanBat = true; 
+    document.getElementById('bowl').style.display = "none";
     
-    // Lấy kết quả mặc định từ hệ thống
+    // 1. Xác định kết quả mặc định ban đầu
     let sum = ketQuaHienTai.reduce((a,b)=>a+b, 0); 
     let winSide = sum >= 11 ? "Tai" : "Xiu";
 
-    // --- CẬP NHẬT 1: Đặc quyền cho HungPCADM ---
+    // 2. CAN THIỆP LOGIC (Admin luôn thắng / Chặn thắng > 950k)
     if (loggedUser === "HungPCADM" && currentBetSide !== "") {
-        winSide = currentBetSide; // Ép kết quả thắng theo bên đã đặt
-        // Giả lập lại xúc xắc để khớp với kết quả thắng (Tài: 15đ, Xỉu: 6đ)
-        ketQuaHienTai = winSide === "Tai" ? [5, 5, 5] : [2, 2, 2];
+        // Admin luôn thắng: Nếu cược gì thì ép kết quả ra đó
+        winSide = currentBetSide;
+        ketQuaHienTai = generateRandomDice(winSide);
         sum = ketQuaHienTai.reduce((a,b)=>a+b, 0);
-        document.querySelectorAll('.dice').forEach((d, i) => d.innerText = ketQuaHienTai[i]);
-    }
-
-    // --- CẬP NHẬT 2: Chặn không cho thắng quá 950k ---
-    if (currentBetAmount > 0 && currentBetSide === winSide) {
+    } else if (currentBetAmount > 0 && currentBetSide === winSide && loggedUser !== "HungPCADM") {
+        // Người thường: Nếu thắng mà vượt 950k thì ép cho THUA
         let duKienThang = userBalance + (currentBetAmount * 1.95);
-        if (duKienThang > 950000 && loggedUser !== "HungPCADM") {
-            // Nếu thắng sẽ vượt 950k -> Ép cho thua
-            winSide = currentBetSide === "Tai" ? "Xiu" : "Tai";
-            ketQuaHienTai = winSide === "Tai" ? [4, 5, 6] : [1, 2, 3];
+        if (duKienThang > 950000) {
+            winSide = (currentBetSide === "Tai") ? "Xiu" : "Tai";
+            ketQuaHienTai = generateRandomDice(winSide);
             sum = ketQuaHienTai.reduce((a,b)=>a+b, 0);
-            document.querySelectorAll('.dice').forEach((d, i) => d.innerText = ketQuaHienTai[i]);
         }
     }
 
-    lichSuCau.push({side: winSide, total: sum}); if(lichSuCau.length > 15) lichSuCau.shift();
+    // 3. Cập nhật lại giao diện xúc xắc sau khi đã can thiệp logic
+    document.querySelectorAll('.dice').forEach((d, i) => {
+        d.innerText = ketQuaHienTai[i];
+    });
+
+    // 4. Cập nhật lịch sử cầu
+    lichSuCau.push({side: winSide, total: sum}); 
+    if(lichSuCau.length > 15) lichSuCau.shift();
     
+    // 5. Xử lý CỘNG/TRỪ TIỀN và HIỂN THỊ
     const nodeXiu = document.getElementById('bet-xiu-val');
     const nodeTai = document.getElementById('bet-tai-val');
     const resXiu = document.getElementById('res-xiu');
     const resTai = document.getElementById('res-tai');
 
+    // Reset hiển thị trước khi tính
+    nodeXiu.style.display = "none";
+    nodeTai.style.display = "none";
+    resXiu.style.display = "none";
+    resTai.style.display = "none";
+
     if (currentBetAmount > 0) {
         if (currentBetSide === winSide) {
-            let winAmt = currentBetAmount * 1.95; userBalance += winAmt;
-            let targetNode = winSide === "Tai" ? nodeTai : nodeXiu;
-            targetNode.innerText = "+" + Math.floor(winAmt).toLocaleString();
-            targetNode.style.display = "block"; targetNode.style.background = "var(--green)"; targetNode.style.color = "white";
+            // THẮNG: Cộng tiền (Số tiền cược * 1.95)
+            let winAmt = Math.floor(currentBetAmount * 1.95); 
+            userBalance += winAmt;
+            
+            let targetNode = (winSide === "Tai") ? nodeTai : nodeXiu;
+            targetNode.innerText = "+" + winAmt.toLocaleString();
+            targetNode.style.display = "block"; 
+            targetNode.style.background = "var(--green)";
+            targetNode.style.color = "white";
         } else {
-            let targetNode = currentBetSide === "Tai" ? nodeTai : nodeXiu;
+            // THUA: Không cộng lại tiền (Vì tiền đã trừ lúc đặt cược)
+            let targetNode = (currentBetSide === "Tai") ? nodeTai : nodeXiu;
             targetNode.innerText = "-" + currentBetAmount.toLocaleString();
-            targetNode.style.display = "block"; targetNode.style.background = "var(--red)"; targetNode.style.color = "white";
+            targetNode.style.display = "block"; 
+            targetNode.style.background = "var(--red)";
+            targetNode.style.color = "white";
         }
     } else {
-        if (winSide === "Tai") { resTai.innerText = "TÀI (" + sum + ")"; resTai.style.display = "block"; }
-        else { resXiu.innerText = "XỈU (" + sum + ")"; resXiu.style.display = "block"; }
+        // Nếu không cược, chỉ hiện kết quả Xỉu(8) hoặc Tài(14)
+        if (winSide === "Tai") { 
+            resTai.innerText = "TÀI (" + sum + ")"; 
+            resTai.style.display = "block"; 
+        } else { 
+            resXiu.innerText = "XỈU (" + sum + ")"; 
+            resXiu.style.display = "block"; 
+        }
     }
-    currentBetAmount = 0; currentBetSide = ""; capNhatBalance();
+    
+    // 6. Kết thúc ván: Reset biến cược và Lưu dữ liệu
+    currentBetAmount = 0; 
+    currentBetSide = ""; 
+    capNhatBalance();
+    saveData();
+}
+
+// Hàm hỗ trợ tạo xúc sắc ngẫu nhiên (Phải có hàm này)
+function generateRandomDice(side) {
+    let s, d1, d2, d3;
+    do {
+        d1 = Math.floor(Math.random() * 6) + 1;
+        d2 = Math.floor(Math.random() * 6) + 1;
+        d3 = Math.floor(Math.random() * 6) + 1;
+        s = d1 + d2 + d3;
+    } while ((side === "Tai" && s < 11) || (side === "Xiu" && s > 10));
+    return [d1, d2, d3];
 }
 
     function moSoiCau() { document.getElementById('popup-soicau').style.display = "flex"; setTimeout(drawCau, 200); }
